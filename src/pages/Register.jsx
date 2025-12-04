@@ -22,7 +22,7 @@ const Register = () => {
 
     try {
       // API'ye istek at
-      const response = await axios.post('https://genckalmedya.cloud/V1/register.php', formData);
+      const response = await axios.post('https://genckalmedya.cloud/v1.1/register.php', formData);
 
       if (response.data.status === 'success') {
         setMessage({ type: 'success', text: response.data.message });

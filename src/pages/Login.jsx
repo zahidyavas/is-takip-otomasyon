@@ -15,7 +15,7 @@ const Login = () => {
 
     try {
       // Senin canlı sunucuna istek atıyoruz
-      const response = await axios.post('https://genckalmedya.cloud/V1/login.php', {
+      const response = await axios.post('https://genckalmedya.cloud/v1.1/login.php', {
         email: email,
         password: password
       });
