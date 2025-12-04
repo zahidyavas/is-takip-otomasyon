@@ -15,7 +15,7 @@ function App() {
   const user = JSON.parse(localStorage.getItem('user'));
 
   return (
-    <Router>
+    <Router basename="/v1.1">
       <Routes>
         {/* Giriş yapılmamışsa Login'e yönlendir */}
         <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
@@ -27,14 +27,14 @@ function App() {
         <Route path="/" element={user ? <Dashboard /> : <Navigate to="/login" />} />
 
         <Route path="/customers" element={user ? <Customers /> : <Navigate to="/login" />} />
-
+        
         <Route path="/board" element={user ? <Board /> : <Navigate to="/login" />} />
 
         <Route path="/notes" element={user ? <Notes /> : <Navigate to="/login" />} />
 
-        <Route path="/reports" element={user ? <Reports /> : <Navigate to="/login" />} />
+        <Route path="/reports" element={user ? <Reports /> : <Navigate to="/login" />}  />
 
-        <Route path="/accounting" element={user ? <Accounting /> : <Navigate to="/login" />} />
+        <Route path="/accounting" element={user ? <Accounting /> : <Navigate to="/login" />}  />
       </Routes>
     </Router>
   );

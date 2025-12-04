@@ -25,7 +25,7 @@ const Login = () => {
         localStorage.setItem('user', JSON.stringify(response.data.user));
         
         // Ana sayfaya yönlendir ve sayfayı yenile (State'lerin güncellenmesi için)
-        window.location.href = "/"; 
+        window.location.href = "/v1.1/";
       } else {
         // Sunucudan "Hatalı şifre" gibi bir mesaj geldiyse göster
         setError(response.data.message);
