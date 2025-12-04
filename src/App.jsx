@@ -6,6 +6,9 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard'; // <--- YENİ: Artık harici dosyadan çekiyoruz
 import Customers from './pages/Customers';
 import Board from './pages/Board';
+import Notes from './pages/Notes';
+import Reports from './pages/Reports';
+import Accounting from './pages/Accounting';
 
 function App() {
   // Kullanıcı giriş yapmış mı kontrol et
@@ -26,6 +29,12 @@ function App() {
         <Route path="/customers" element={user ? <Customers /> : <Navigate to="/login" />} />
 
         <Route path="/board" element={user ? <Board /> : <Navigate to="/login" />} />
+
+        <Route path="/notes" element={user ? <Notes /> : <Navigate to="/login" />} />
+
+        <Route path="/reports" element={user ? <Reports /> : <Navigate to="/login" />} />
+
+        <Route path="/accounting" element={user ? <Accounting /> : <Navigate to="/login" />} />
       </Routes>
     </Router>
   );
