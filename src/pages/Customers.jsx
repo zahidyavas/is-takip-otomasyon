@@ -1,25 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import axios from 'axios';
-import { FaPlus, FaTrash, FaUserTie, FaPhone, FaCalendarAlt, FaMoneyBillWave, FaCalendarCheck, FaInstagram, FaYoutube, FaTiktok, FaFacebook } from 'react-icons/fa';
+import { FaPlus, FaTrash, FaEdit, FaUserTie, FaMoneyBillWave, FaCalendarCheck, FaInstagram, FaYoutube, FaTiktok, FaFacebook, FaTimes } from 'react-icons/fa';
 
 const Customers = () => {
   const [customers, setCustomers] = useState([]);
   const [contents, setContents] = useState([]);
-  const [loading, setLoading] = useState(true);
   
+  // Düzenleme Modu State'leri
+  const [editingCustomerId, setEditingCustomerId] = useState(null); // Müşteri Düzenleme ID
+  const [editingContentId, setEditingContentId] = useState(null);   // İçerik Düzenleme ID (YENİ)
+
   // Form Verileri
   const [formData, setFormData] = useState({
     name: '', email: '', phone: '', contract_start: '', contract_end: '', fee: ''
   });
 
   const [contentForm, setContentForm] = useState({
-    customer_id: '', title: '', platform: 'Instagram', scheduled_date: ''
+    customer_id: '', title: '', platform: 'Instagram'
   });
 
   // Veri Çekme
   const fetchData = async () => {
-    setLoading(true);
     try {
       const [resCust, resCont] = await Promise.all([
         axios.get('https://genckalmedya.cloud/v1.1/customers.php?type=customers'),
@@ -29,40 +31,85 @@ const Customers = () => {
       if (resCont.data.status === 'success') setContents(resCont.data.data);
     } catch (error) {
       console.error("Veri hatası:", error);
-    } finally {
-      setLoading(false);
     }
   };
 
   useEffect(() => { fetchData(); }, []);
 
-  // Handlers
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+  // --- HANDLERS (MÜŞTERİ) ---
+  const handleCustomerChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
   
-  const handleSubmit = async (e) => {
+  const handleCustomerSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('https://genckalmedya.cloud/v1.1/customers.php', formData);
-      if (res.data.status === 'success') {
+      if (editingCustomerId) {
+        // GÜNCELLEME
+        await axios.post('https://genckalmedya.cloud/v1.1/customers.php', {
+          ...formData, action: 'update', type: 'customer', id: editingCustomerId
+        });
+        alert("Müşteri Güncellendi!");
+        setEditingCustomerId(null);
+      } else {
+        // EKLEME
+        await axios.post('https://genckalmedya.cloud/v1.1/customers.php', formData);
         alert("Müşteri Eklendi!");
-        setFormData({ name: '', email: '', phone: '', contract_start: '', contract_end: '', fee: '' });
-        fetchData();
       }
-    } catch(err) { alert("Hata"); }
+      setFormData({ name: '', email: '', phone: '', contract_start: '', contract_end: '', fee: '' });
+      fetchData();
+    } catch(err) { alert("Hata oluştu."); }
   };
 
+  const startEditCustomer = (customer) => {
+    setEditingCustomerId(customer.id);
+    setFormData({
+      name: customer.name,
+      email: customer.email || '',
+      phone: customer.phone || '',
+      contract_start: customer.contract_start || '',
+      contract_end: customer.contract_end || '',
+      fee: customer.fee || ''
+    });
+  };
+
+  // --- HANDLERS (İÇERİK) ---
   const handleContentSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('https://genckalmedya.cloud/v1.1/customers.php', contentForm);
-      if (res.data.status === 'success') {
+      if (editingContentId) {
+        // İÇERİK GÜNCELLEME (YENİ)
+        await axios.post('https://genckalmedya.cloud/v1.1/customers.php', {
+          ...contentForm,
+          action: 'update',
+          type: 'content',
+          id: editingContentId
+        });
+        alert("İçerik Güncellendi!");
+        setEditingContentId(null);
+      } else {
+        // İÇERİK EKLEME
+        await axios.post('https://genckalmedya.cloud/v1.1/customers.php', contentForm);
         alert("Planlandı!");
-        setContentForm({ ...contentForm, title: '' });
-        fetchData();
       }
+      setContentForm({ customer_id: '', title: '', platform: 'Instagram' });
+      fetchData();
     } catch(err) { alert("Hata"); }
   };
 
+  const startEditContent = (content) => {
+    setEditingContentId(content.id);
+    setContentForm({
+      customer_id: content.customer_id,
+      title: content.title,
+      platform: content.platform
+    });
+  };
+
+  const cancelEditContent = () => {
+    setEditingContentId(null);
+    setContentForm({ customer_id: '', title: '', platform: 'Instagram' });
+  }
+
+  // SİLME
   const handleDelete = async (id, type) => {
     if(!confirm("Silmek istediğine emin misin?")) return;
     await axios.post('https://genckalmedya.cloud/v1.1/customers.php', { action: 'delete', id, type });
@@ -88,47 +135,66 @@ const Customers = () => {
           <p className="text-gray-400 mt-1">Müşterilerini ekle ve içerik takvimini yönet.</p>
         </header>
 
-        {/* ANA IZGARA: 2 Sütunlu Yapı */}
+        {/* ANA IZGARA */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
           
-          {/* --- 1. SOL ÜST: Müşteri Ekleme Formu --- */}
-          <div className="bg-dark-card border border-dark-border p-6 rounded-xl shadow-lg h-fit">
-            <h3 className="text-xl font-bold mb-4 border-b border-dark-border pb-2 flex items-center gap-2">
-              <span className="text-brand-green">+</span> Yeni Müşteri Ekle
+          {/* --- 1. Müşteri Ekleme/Düzenleme --- */}
+          <div className={`bg-dark-card border border-dark-border p-6 rounded-xl shadow-lg h-fit transition-all duration-300 ${editingCustomerId ? 'border-yellow-500 shadow-yellow-900/20' : ''}`}>
+            <h3 className="text-xl font-bold mb-4 border-b border-dark-border pb-2 flex items-center justify-between gap-2">
+              <span className="flex items-center gap-2">
+                {editingCustomerId ? <FaEdit className="text-yellow-500"/> : <span className="text-brand-green">+</span>}
+                {editingCustomerId ? 'Müşteriyi Düzenle' : 'Yeni Müşteri Ekle'}
+              </span>
+              {editingCustomerId && (
+                <button onClick={() => {setEditingCustomerId(null); setFormData({name:'', email:'', phone:'', contract_start:'', contract_end:'', fee:''})}} className="btn btn-xs btn-ghost text-gray-400 hover:text-white">
+                  <FaTimes /> Vazgeç
+                </button>
+              )}
             </h3>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleCustomerSubmit} className="space-y-4">
               <div>
                 <label className="label text-gray-400 text-sm">Müşteri Adı</label>
-                <input type="text" name="name" value={formData.name} onChange={handleChange} className="input input-bordered w-full bg-dark-main border-dark-border focus:border-brand-green" placeholder="Örn: Mehmet Yılmaz" required />
+                <input type="text" name="name" value={formData.name} onChange={handleCustomerChange} className="input input-bordered w-full bg-dark-main border-dark-border focus:border-brand-green" placeholder="Örn: Mehmet Yılmaz" required />
               </div>
               <div className="grid grid-cols-2 gap-2">
-                <input placeholder="E-posta" type="email" name="email" value={formData.email} onChange={handleChange} className="input input-bordered w-full bg-dark-main border-dark-border" />
-                <input placeholder="Telefon" type="text" name="phone" value={formData.phone} onChange={handleChange} className="input input-bordered w-full bg-dark-main border-dark-border" />
+                <input placeholder="E-posta" type="email" name="email" value={formData.email} onChange={handleCustomerChange} className="input input-bordered w-full bg-dark-main border-dark-border" />
+                <input placeholder="Telefon" type="text" name="phone" value={formData.phone} onChange={handleCustomerChange} className="input input-bordered w-full bg-dark-main border-dark-border" />
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
                    <label className="text-xs text-gray-500 mb-1 block">Başlangıç</label>
-                   <input type="date" name="contract_start" value={formData.contract_start} onChange={handleChange} className="input input-bordered w-full bg-dark-main border-dark-border" />
+                   <input type="date" name="contract_start" value={formData.contract_start} onChange={handleCustomerChange} className="input input-bordered w-full bg-dark-main border-dark-border" />
                 </div>
                 <div>
                    <label className="text-xs text-gray-500 mb-1 block">Bitiş</label>
-                   <input type="date" name="contract_end" value={formData.contract_end} onChange={handleChange} className="input input-bordered w-full bg-dark-main border-dark-border" />
+                   <input type="date" name="contract_end" value={formData.contract_end} onChange={handleCustomerChange} className="input input-bordered w-full bg-dark-main border-dark-border" />
                 </div>
               </div>
               <div>
                  <div className="relative">
                    <FaMoneyBillWave className="absolute left-3 top-3.5 text-gray-500" />
-                   <input type="number" name="fee" value={formData.fee} onChange={handleChange} className="input input-bordered w-full pl-10 bg-dark-main border-dark-border" placeholder="Sözleşme Ücreti (₺)" />
+                   <input type="number" name="fee" value={formData.fee} onChange={handleCustomerChange} className="input input-bordered w-full pl-10 bg-dark-main border-dark-border" placeholder="Sözleşme Ücreti (₺)" />
                  </div>
               </div>
-              <button className="btn bg-brand-green hover:bg-green-600 text-white w-full border-none">Müşteriyi Kaydet</button>
+              
+              <button className={`btn w-full border-none text-white ${editingCustomerId ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-brand-green hover:bg-green-600'}`}>
+                {editingCustomerId ? 'Güncellemeyi Kaydet' : 'Müşteriyi Kaydet'}
+              </button>
             </form>
           </div>
 
-          {/* --- 2. SAĞ ÜST: İçerik Planı Formu --- */}
-          <div className="bg-dark-card border border-dark-border p-6 rounded-xl shadow-lg h-fit">
-            <h3 className="text-xl font-bold mb-4 border-b border-dark-border pb-2 flex items-center gap-2">
-               <FaCalendarCheck className="text-brand-green"/> İçerik Planı Ekle
+          {/* --- 2. İçerik Ekleme/Düzenleme --- */}
+          <div className={`bg-dark-card border border-dark-border p-6 rounded-xl shadow-lg h-fit transition-all duration-300 ${editingContentId ? 'border-blue-500 shadow-blue-900/20' : ''}`}>
+            <h3 className="text-xl font-bold mb-4 border-b border-dark-border pb-2 flex items-center justify-between gap-2">
+               <span className="flex items-center gap-2">
+                  {editingContentId ? <FaEdit className="text-blue-500"/> : <FaCalendarCheck className="text-brand-green"/>} 
+                  {editingContentId ? 'İçerik Düzenle' : 'İçerik Planı Ekle'}
+               </span>
+               {editingContentId && (
+                <button onClick={cancelEditContent} className="btn btn-xs btn-ghost text-gray-400 hover:text-white">
+                  <FaTimes /> Vazgeç
+                </button>
+              )}
             </h3>
             <form onSubmit={handleContentSubmit} className="space-y-4">
               <div>
@@ -142,23 +208,21 @@ const Customers = () => {
                  <label className="label text-gray-400 text-sm">İçerik Başlığı</label>
                  <input type="text" className="input input-bordered w-full bg-dark-main border-dark-border" placeholder="Örn: Instagram Reels" value={contentForm.title} onChange={(e) => setContentForm({...contentForm, title: e.target.value})} required />
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                 <div>
-                    <label className="label text-gray-400 text-sm">Platform</label>
-                    <select className="select select-bordered w-full bg-dark-main border-dark-border" value={contentForm.platform} onChange={(e) => setContentForm({...contentForm, platform: e.target.value})}>
-                       <option>Instagram</option><option>TikTok</option><option>Facebook</option><option>YouTube</option>
-                    </select>
-                 </div>
-                 <div>
-                    <label className="label text-gray-400 text-sm">Planlanan Tarih</label>
-                    <input type="date" className="input input-bordered w-full bg-dark-main border-dark-border" value={contentForm.scheduled_date} onChange={(e) => setContentForm({...contentForm, scheduled_date: e.target.value})} required />
-                 </div>
+              
+              <div>
+                <label className="label text-gray-400 text-sm">Platform</label>
+                <select className="select select-bordered w-full bg-dark-main border-dark-border" value={contentForm.platform} onChange={(e) => setContentForm({...contentForm, platform: e.target.value})}>
+                    <option>Instagram</option><option>TikTok</option><option>Facebook</option><option>YouTube</option><option>X</option><option>LinkedIn</option>
+                </select>
               </div>
-              <button className="btn btn-secondary w-full border-none mt-4">Planla</button>
+
+              <button className={`btn w-full border-none text-white ${editingContentId ? 'bg-blue-600 hover:bg-blue-700' : 'btn-secondary'}`}>
+                  {editingContentId ? 'İçeriği Güncelle' : 'Planla'}
+              </button>
             </form>
           </div>
 
-          {/* --- 3. SOL ALT: Müşteri Listesi --- */}
+          {/* --- 3. Müşteri Listesi --- */}
           <div className="bg-dark-card border border-dark-border rounded-xl shadow-lg overflow-hidden flex flex-col h-[500px]">
             <div className="p-4 border-b border-dark-border flex justify-between items-center bg-dark-card sticky top-0 z-10">
               <h3 className="font-bold text-lg">Müşteri Listesi</h3>
@@ -167,20 +231,25 @@ const Customers = () => {
             <div className="overflow-auto flex-1">
               <table className="table w-full">
                 <thead className="bg-dark-main text-gray-400 sticky top-0">
-                  <tr><th>Müşteri</th><th>Tarih / Ücret</th><th>İşlem</th></tr>
+                  <tr>
+                    <th>Müşteri</th>
+                    <th>Tarih / Ücret</th>
+                    <th>İşlem</th>
+                  </tr>
                 </thead>
                 <tbody>
                   {customers.map((c) => (
-                    <tr key={c.id} className="hover:bg-dark-main/50 border-dark-border">
+                    <tr key={c.id} className={`hover:bg-dark-main/50 border-dark-border ${editingCustomerId === c.id ? 'bg-yellow-900/10 border-l-4 border-l-yellow-500' : ''}`}>
                       <td>
                         <div className="font-bold text-white">{c.name}</div>
                         <div className="text-xs text-gray-500">{c.phone}</div>
                       </td>
                       <td>
-                        <div className="text-xs text-gray-400">{c.contract_end ? c.contract_end : '-'}</div>
+                        <div className="text-xs text-gray-400">{c.contract_end ? c.contract_end : '-'}</div> 
                         <div className="text-brand-green font-bold text-sm">{c.fee} ₺</div>
                       </td>
-                      <td>
+                      <td className="flex gap-1">
+                        <button onClick={() => startEditCustomer(c)} className="btn btn-ghost btn-xs text-blue-400 hover:bg-blue-900/20"><FaEdit /></button>
                         <button onClick={() => handleDelete(c.id, 'customers')} className="btn btn-ghost btn-xs text-red-500 hover:bg-red-900/20"><FaTrash /></button>
                       </td>
                     </tr>
@@ -190,7 +259,7 @@ const Customers = () => {
             </div>
           </div>
 
-          {/* --- 4. SAĞ ALT: İçerik Listesi --- */}
+          {/* --- 4. İçerik Listesi --- */}
           <div className="bg-dark-card border border-dark-border rounded-xl shadow-lg overflow-hidden flex flex-col h-[500px]">
              <div className="p-4 border-b border-dark-border flex justify-between items-center bg-dark-card sticky top-0 z-10">
                 <h3 className="font-bold text-lg">Planlanan İçerikler</h3>
@@ -199,23 +268,32 @@ const Customers = () => {
              <div className="overflow-auto flex-1">
                 <table className="table w-full">
                    <thead className="bg-dark-main text-gray-400 sticky top-0">
-                      <tr><th>Tarih</th><th>Platform / Müşteri</th><th>Başlık</th><th>İşlem</th></tr>
+                      <tr>
+                        <th>Platform / Müşteri</th>
+                        <th>Başlık</th>
+                        <th>İşlem</th>
+                      </tr>
                    </thead>
                    <tbody>
                       {contents.length === 0 ? (
                          <tr><td colSpan="4" className="text-center p-4 text-gray-500">Plan yok.</td></tr>
                       ) : (
                          contents.map((c) => (
-                            <tr key={c.id} className="hover:bg-dark-main/50 border-dark-border">
-                               <td className="font-mono text-sm text-gray-300">{c.scheduled_date}</td>
+                            <tr key={c.id} className={`hover:bg-dark-main/50 border-dark-border ${editingContentId === c.id ? 'bg-blue-900/10 border-l-4 border-l-blue-500' : ''}`}>
                                <td>
                                   <div className="flex items-center gap-2 mb-1">
                                      {getIcon(c.platform)} <span className="text-xs opacity-70">{c.customer_name}</span>
                                   </div>
                                </td>
                                <td className="text-sm">{c.title}</td>
-                               <td>
-                                  <button onClick={() => handleDelete(c.id, 'content')} className="btn btn-ghost btn-xs text-red-500 hover:bg-red-900/20"><FaTrash /></button>
+                               <td className="flex gap-1">
+                                  {/* YENİ: DÜZENLE BUTONU */}
+                                  <button onClick={() => startEditContent(c)} className="btn btn-ghost btn-xs text-blue-400 hover:bg-blue-900/20">
+                                    <FaEdit />
+                                  </button>
+                                  <button onClick={() => handleDelete(c.id, 'content')} className="btn btn-ghost btn-xs text-red-500 hover:bg-red-900/20">
+                                    <FaTrash />
+                                  </button>
                                </td>
                             </tr>
                          ))
