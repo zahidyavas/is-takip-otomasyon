@@ -67,33 +67,36 @@ const Reports = () => {
   return (
     <div className="flex min-h-screen bg-dark-main text-white font-sans">
       <Sidebar />
-      <main className="flex-1 p-8 overflow-y-auto">
+      
+      {/* Mobilde pt-16 (hamburger menü boşluğu), p-4 (kenar boşlukları) */}
+      <main className="flex-1 p-4 md:p-8 pt-16 md:pt-8 overflow-y-auto">
         
-        <header className="mb-8">
-          <h2 className="text-3xl font-bold flex items-center gap-3">
+        <header className="mb-6 md:mb-8">
+          <h2 className="text-2xl md:text-3xl font-bold flex items-center gap-3">
             <FaChartBar className="text-brand-green" /> Haftalık Raporlar
           </h2>
-          <p className="text-gray-400 mt-1">Tamamlanan işleri gör, haftalık özetini oluştur.</p>
+          <p className="text-sm md:text-base text-gray-400 mt-1">Tamamlanan işleri gör, haftalık özetini oluştur.</p>
         </header>
 
-        {/* ÜST BÖLÜM: RAPOR OLUŞTURMA */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-10">
+        {/* ÜST BÖLÜM: RAPOR OLUŞTURMA & ANALİZ */}
+        {/* Mobilde tek kolon, Laptopta (lg) iki kolon */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-10">
           
           {/* 1. SOL KART: RAPOR YAZMA ALANI */}
-          <div className="bg-dark-card border border-dark-border p-6 rounded-xl shadow-lg">
-            <h3 className="text-xl font-bold mb-4 border-b border-dark-border pb-2 flex items-center gap-2">
+          <div className="bg-dark-card border border-dark-border p-4 md:p-6 rounded-xl shadow-lg">
+            <h3 className="text-lg md:text-xl font-bold mb-4 border-b border-dark-border pb-2 flex items-center gap-2">
                <FaFileAlt className="text-blue-400"/> Yeni Rapor Oluştur
             </h3>
             
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="label text-gray-400 text-xs">Başlangıç Tarihi</label>
-                  <input type="date" className="input input-bordered w-full bg-dark-main border-dark-border" value={form.start_date} onChange={e => setForm({...form, start_date: e.target.value})} required />
+                  <label className="label text-gray-400 text-xs">Başlangıç</label>
+                  <input type="date" className="input input-bordered w-full bg-dark-main border-dark-border text-sm" value={form.start_date} onChange={e => setForm({...form, start_date: e.target.value})} required />
                 </div>
                 <div>
-                  <label className="label text-gray-400 text-xs">Bitiş Tarihi</label>
-                  <input type="date" className="input input-bordered w-full bg-dark-main border-dark-border" value={form.end_date} onChange={e => setForm({...form, end_date: e.target.value})} required />
+                  <label className="label text-gray-400 text-xs">Bitiş</label>
+                  <input type="date" className="input input-bordered w-full bg-dark-main border-dark-border text-sm" value={form.end_date} onChange={e => setForm({...form, end_date: e.target.value})} required />
                 </div>
               </div>
 
@@ -104,36 +107,37 @@ const Reports = () => {
 
               <div>
                 <label className="label text-gray-400 text-xs">Haftalık Özet / Notlar</label>
-                <textarea className="textarea textarea-bordered w-full bg-dark-main border-dark-border h-32" placeholder="Bu hafta yapılan önemli işler, notlar..." value={form.summary} onChange={e => setForm({...form, summary: e.target.value})} required></textarea>
+                <textarea className="textarea textarea-bordered w-full bg-dark-main border-dark-border h-32 text-sm" placeholder="Bu hafta yapılan önemli işler, notlar..." value={form.summary} onChange={e => setForm({...form, summary: e.target.value})} required></textarea>
               </div>
 
-              <button className="btn bg-brand-green border-none text-white w-full hover:bg-green-600"><FaPlus /> Raporu Kaydet</button>
+              <button className="btn bg-brand-green border-none text-white w-full hover:bg-green-600 h-12"><FaPlus /> Raporu Kaydet</button>
             </form>
           </div>
 
           {/* 2. SAĞ KART: OTOMATİK TAMAMLANAN İŞLER (Analiz) */}
-          <div className="bg-dark-card border border-dark-border p-6 rounded-xl shadow-lg flex flex-col h-full">
-            <h3 className="text-xl font-bold mb-4 border-b border-dark-border pb-2 flex items-center gap-2 text-yellow-400">
+          <div className="bg-dark-card border border-dark-border p-4 md:p-6 rounded-xl shadow-lg flex flex-col h-full min-h-[300px]">
+            <h3 className="text-lg md:text-xl font-bold mb-4 border-b border-dark-border pb-2 flex items-center gap-2 text-yellow-400">
                <FaCheckDouble /> Bu Aralıkta Tamamlananlar
             </h3>
             
-            <div className="flex-1 overflow-y-auto custom-scrollbar bg-dark-main rounded-lg p-4 border border-dark-border">
+            {/* Listeye mobilde maksimum yükseklik verelim ki sayfa çok uzamasın */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar bg-dark-main rounded-lg p-3 md:p-4 border border-dark-border max-h-[400px]">
               {!form.start_date || !form.end_date ? (
                 <div className="text-center text-gray-500 mt-10">
                   <FaCalendarAlt className="text-4xl mx-auto mb-2 opacity-20"/>
-                  <p>Tarih aralığı seçersen, o tarihlerde tamamlanan işler burada listelenir.</p>
+                  <p className="text-sm">Tarih aralığı seçersen, o tarihlerde tamamlanan işler burada listelenir.</p>
                 </div>
               ) : completedTasks.length === 0 ? (
-                <p className="text-center text-gray-500 mt-10">Bu tarih aralığında tamamlanmış iş bulunamadı.</p>
+                <p className="text-center text-gray-500 mt-10 text-sm">Bu tarih aralığında tamamlanmış iş bulunamadı.</p>
               ) : (
                 <ul className="space-y-3">
                   {completedTasks.map((task, index) => (
-                    <li key={index} className="bg-dark-card p-3 rounded border border-dark-border flex justify-between items-start">
+                    <li key={index} className="bg-dark-card p-3 rounded border border-dark-border flex flex-col md:flex-row justify-between items-start gap-2">
                       <div>
                         <div className="font-bold text-sm text-white">{task.project_name}</div>
                         <div className="text-xs text-gray-400">{task.title}</div>
                       </div>
-                      <span className="text-xs bg-green-900/30 text-green-400 px-2 py-1 rounded border border-green-900/50">
+                      <span className="text-[10px] md:text-xs bg-green-900/30 text-green-400 px-2 py-1 rounded border border-green-900/50 whitespace-nowrap">
                         {new Date(task.updated_at).toLocaleDateString()}
                       </span>
                     </li>
@@ -147,21 +151,28 @@ const Reports = () => {
         </div>
 
         {/* ALT BÖLÜM: GEÇMİŞ RAPORLAR LİSTESİ */}
-        <h3 className="text-xl font-bold mb-4 border-l-4 border-brand-green pl-3">Geçmiş Raporlar</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <h3 className="text-lg md:text-xl font-bold mb-4 border-l-4 border-brand-green pl-3">Geçmiş Raporlar</h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 pb-20 md:pb-0">
           {reports.map((report) => (
-            <div key={report.id} className="bg-dark-card border border-dark-border p-5 rounded-xl shadow-md hover:border-gray-500 transition-colors group">
+            <div key={report.id} className="bg-dark-card border border-dark-border p-4 md:p-5 rounded-xl shadow-md hover:border-gray-500 transition-colors group">
               <div className="flex justify-between items-start mb-3">
-                <div>
-                  <h4 className="font-bold text-white text-lg">{report.title}</h4>
+                <div className="overflow-hidden">
+                  <h4 className="font-bold text-white text-base md:text-lg truncate pr-2">{report.title}</h4>
                   <p className="text-xs text-brand-green flex items-center gap-1 mt-1">
                     <FaCalendarAlt /> {report.start_date} / {report.end_date}
                   </p>
                 </div>
-                <button onClick={() => handleDelete(report.id)} className="btn btn-xs btn-ghost text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><FaTrash /></button>
+                {/* Mobilde her zaman görünür, Masaüstünde hover ile görünür */}
+                <button 
+                    onClick={() => handleDelete(report.id)} 
+                    className="btn btn-xs btn-ghost text-red-500 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                    <FaTrash />
+                </button>
               </div>
               
-              <div className="bg-dark-main p-3 rounded-lg text-sm text-gray-300 h-24 overflow-y-auto border border-dark-border">
+              <div className="bg-dark-main p-3 rounded-lg text-sm text-gray-300 h-24 overflow-y-auto border border-dark-border custom-scrollbar">
                 {report.summary}
               </div>
               
@@ -170,7 +181,7 @@ const Reports = () => {
               </div>
             </div>
           ))}
-          {reports.length === 0 && <p className="text-gray-500">Henüz kaydedilmiş rapor yok.</p>}
+          {reports.length === 0 && <p className="text-gray-500 col-span-full text-center">Henüz kaydedilmiş rapor yok.</p>}
         </div>
 
       </main>

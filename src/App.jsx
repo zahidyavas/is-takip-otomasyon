@@ -9,7 +9,7 @@ import Board from './pages/Board';
 import Notes from './pages/Notes';
 import Reports from './pages/Reports';
 import Accounting from './pages/Accounting';
-
+import Leads from './pages/Leads';
 function App() {
   // Kullanıcı giriş yapmış mı kontrol et
   const user = JSON.parse(localStorage.getItem('user'));
@@ -35,6 +35,8 @@ function App() {
         <Route path="/reports" element={user ? <Reports /> : <Navigate to="/login" />}  />
 
         <Route path="/accounting" element={user ? <Accounting /> : <Navigate to="/login" />}  />
+
+        <Route path="/leads" element={user && user.role === 'patron' ? <Leads /> : <Navigate to="/" />} />
       </Routes>
     </Router>
   );
